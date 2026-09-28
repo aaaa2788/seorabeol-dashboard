@@ -108,8 +108,14 @@ async function 시작() {
       <button>로그인 링크 받기</button><span id="msg"></span></form>`);
     $('login').onsubmit = async (e) => {
       e.preventDefault();
+      const 버튼 = e.submitter || $('login').querySelector('button');
+      버튼.disabled = true;  // 두 번 누르면 Supabase가 1분 제한으로 거절한다
       const { error } = await sb.auth.signInWithOtp({ email: $('email').value, options: { emailRedirectTo: location.origin } });
-      $('msg').textContent = error ? `보내지 못했습니다: ${error.message}` : '메일함에서 링크를 눌러 주세요.';
+      const 초 = error && (error.message.match(/after (\d+) seconds?/) || [])[1];
+      $('msg').textContent = !error ? '메일을 보냈습니다. 메일함(스팸함 포함)에서 링크를 눌러 주세요.'
+        : 초 ? `방금 보낸 메일이 있습니다. 메일함을 먼저 확인해 주세요. 다시 받으려면 ${초}초 뒤에 누르세요.`
+        : `보내지 못했습니다: ${error.message}`;
+      setTimeout(() => { 버튼.disabled = false; }, (초 ? +초 : 60) * 1000);
     };
     return;
   }
