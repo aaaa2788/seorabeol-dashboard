@@ -1,0 +1,7 @@
+node_modules/
+.env
+.env.*
+public/config.js
+.vercel/
+*.log
+public/local-data.js

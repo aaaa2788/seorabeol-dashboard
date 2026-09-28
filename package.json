@@ -1,0 +1,11 @@
+{
+  "name": "seorabeol-dashboard",
+  "private": true,
+  "description": "서라벌 블로그 성과판 — 발행한 글의 전후 순위",
+  "scripts": {
+    "build": "node scripts/build-config.js",
+    "import": "node scripts/import.js",
+    "import:check": "node scripts/import.js --미리보기"
+  },
+  "engines": { "node": ">=18" }
+}

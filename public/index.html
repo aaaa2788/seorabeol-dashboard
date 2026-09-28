@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>서라벌 블로그 성과판</title>
+<style>
+:root {
+  --bg: #f7f6f2; --card: #ffffff; --soft: #efede6; --line: #e2dfd6;
+  --text: #22211e; --sub: #6b6960; --muted: #9a978d;
+  --up: #2f6b12; --up-bg: #e7f1db; --down: #9b2c2c; --down-bg: #f9e5e5;
+  --same: #5f5e5a; --wait: #7a5a12; --wait-bg: #f7ecd6; --accent: #185fa5;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1a18; --card: #232320; --soft: #2c2c29; --line: #3a3a36;
+    --text: #ecebe6; --sub: #b0aea5; --muted: #85837b;
+    --up: #a6d479; --up-bg: #26361a; --down: #f0a0a0; --down-bg: #3d2020;
+    --same: #c9c7bf; --wait: #eac27a; --wait-bg: #3a2f18; --accent: #85b7eb;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.6 system-ui, -apple-system, "Malgun Gothic", sans-serif; }
+main { max-width: 1040px; margin: 0 auto; padding: 24px 16px 48px; }
+header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 16px; }
+h1 { font-size: 22px; font-weight: 600; margin: 0; }
+.meta { color: var(--sub); font-size: 13px; }
+.banner { background: var(--wait-bg); color: var(--wait); border-radius: 10px; padding: 10px 14px; font-size: 14px; margin-bottom: 16px; }
+.banner form { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+input, select, button { font: inherit; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; background: var(--card); color: var(--text); }
+button { cursor: pointer; }
+button:hover { background: var(--soft); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.tile { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; text-align: left; }
+.tile[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.tile .l { font-size: 13px; color: var(--sub); }
+.tile .n { font-size: 24px; font-weight: 600; }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; font-size: 14px; color: var(--sub); }
+.table { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.row { display: grid; grid-template-columns: 56px minmax(0, 1.4fr) 56px minmax(0, 1.6fr) 110px; gap: 10px; align-items: center; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 14px; }
+.row.hd { border-top: none; color: var(--sub); font-size: 12px; background: var(--soft); }
+.row.down { background: var(--down-bg); }
+.kw a { color: inherit; }
+.kw small { display: block; color: var(--muted); font-size: 12px; }
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); }
+.r { display: inline-flex; flex-direction: column; align-items: center; min-width: 38px; padding: 2px 6px; border-radius: 6px; background: var(--soft); color: var(--text); font-size: 13px; line-height: 1.3; }
+.r i { font-style: normal; font-size: 10px; color: var(--muted); }
+.r.none { color: var(--muted); }
+.pill { font-size: 12px; padding: 3px 8px; border-radius: 6px; white-space: nowrap; justify-self: start; }
+.p-up { background: var(--up-bg); color: var(--up); }
+.p-down { background: var(--down-bg); color: var(--down); border: 1px solid var(--down); }
+.p-same { background: var(--soft); color: var(--same); }
+.p-wait { background: var(--wait-bg); color: var(--wait); }
+.empty { padding: 24px; text-align: center; color: var(--sub); }
+.note { color: var(--muted); font-size: 12px; margin-top: 12px; }
+@media (max-width: 640px) {
+  .row { grid-template-columns: 1fr auto; }
+  .row.hd { display: none; }
+  .row .d, .row .acc { font-size: 12px; color: var(--muted); }
+  .row .flow { grid-column: 1 / -1; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>발행한 글, 효과 있었나</h1>
+    <span class="meta" id="meta"></span>
+  </header>
+  <div id="banner"></div>
+  <div class="tiles" id="tiles"></div>
+  <div class="tools">
+    <label>계정 <select id="acc"><option value="">전체</option><option>5991</option><option>최적</option><option>5992</option></select></label>
+    <span id="count"></span>
+  </div>
+  <div class="table" id="list"></div>
+  <p class="note">순위가 오른 것이 꼭 그 글 덕분이라고 단정할 수는 없습니다. "발행 뒤 이렇게 됐다"는 기록입니다. 발행 당일에 잰 순위는 전후를 알 수 없어 빼고 봅니다.</p>
+</main>
+<script src="config.js" onerror="void 0"></script>
+<script src="local-data.js" onerror="void 0"></script>
+<script src="sample.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
