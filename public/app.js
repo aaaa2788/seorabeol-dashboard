@@ -26,25 +26,28 @@ function 판정(글, 순위기록) {
     전: 전 ? { 날: 전.measured_on, 순위: 값(전) } : null, 후: 후.map((r) => ({ 날: r.measured_on, 순위: 값(r) })) };
 
   if (!후.length) return { ...줄, 결과: 'wait', 글자: '아직 안 잼' };
-  const 지금 = 값(후.at(-1)) ?? 없음;
-  if (!전) return { ...줄, 결과: 'nobase', 글자: 지금 === 없음 ? '노출 없음' : `지금 ${지금}위 · 전 기록 없음` };
-  const 앞 = 값(전) ?? 없음;
-  // 발행 뒤 올랐다가 도로 내려온 글 — 전과 비교하면 「그대로」지만 가장 먼저 봐야 할 글이다
-  const 최고 = Math.min(...후.map((r) => 값(r) ?? 없음));
-  if (지금 >= 앞 && 최고 < 지금) return { ...줄, 결과: 'down', 글자: `최고 ${최고}위 → ${지금 === 없음 ? '빠짐' : `${지금}위`}` };
-  if (지금 < 앞) return { ...줄, 결과: 'up', 글자: 앞 === 없음 ? `새로 ${지금}위` : `↑ ${앞 - 지금}칸 (${지금}위)` };
-  if (지금 > 앞) return { ...줄, 결과: 'down', 글자: 지금 === 없음 ? '빠짐' : `↓ ${지금 - 앞}칸 (${지금}위)` };
-  return { ...줄, 결과: 'same', 글자: 지금 === 없음 ? '여전히 없음' : `그대로 ${지금}위` };
+
+  // 긴급 = 가장 최근 측정에서 세 계정 모두 5위 밖 (원장 기준 9/30)
+  //   한 계정이라도 5위 안이면 한의원은 노출 중이라 급하지 않다. 글 하나가 아니라 키워드로 본다
+  const 최근 = 후.at(-1);
+  const 최고계정 = Object.entries(칸).map(([k, c]) => ({ 계정: k, 순위: 최근[c] ?? 없음 }))
+    .sort((a, b) => a.순위 - b.순위)[0];
+  if (최고계정.순위 > 5) return { ...줄, 결과: 'urgent', 글자: '긴급 · 5위 안 없음' };
+
+  const 지금 = 값(최근) ?? 없음;
+  const 앞 = 전 ? 값(전) ?? 없음 : null;
+  if (앞 != null && 지금 < 앞) return { ...줄, 결과: 'up', 글자: 앞 === 없음 ? `새로 ${지금}위` : `↑ ${앞 - 지금}칸 (${지금}위)` };
+  return { ...줄, 결과: 'ok', 글자: `${최고계정.계정} ${최고계정.순위}위로 노출 중` };
 }
 
 // ── 그리기
 const 묶음 = [
-  { key: 'up', 이름: '순위 올라감', 색: 'p-up' },
-  { key: 'down', 이름: '내려감 · 빠짐', 색: 'p-down' },
-  { key: 'same', 이름: '그대로', 색: 'p-same' },
+  { key: 'urgent', 이름: '긴급 · 세 계정 모두 5위 밖', 색: 'p-down' },
+  { key: 'up', 이름: '이 글로 순위 올라감', 색: 'p-up' },
+  { key: 'ok', 이름: '5위 안 노출 중', 색: 'p-same' },
   { key: 'wait', 이름: '아직 안 잼', 색: 'p-wait' },
 ];
-const 색 = { up: 'p-up', down: 'p-down', same: 'p-same', wait: 'p-wait', nobase: 'p-same' };
+const 색 = { urgent: 'p-down', up: 'p-up', ok: 'p-same', wait: 'p-wait' };
 
 function 순위칩(x, 표시) {
   const 글 = x.순위 == null ? '없음' : `${x.순위}위`;
@@ -73,7 +76,7 @@ function 그리기() {
           `<b class="${a.이글 ? 'mine' : ''}">${esc(a.계정)}${a.이글 ? ' ✎' : ''}</b>${a.순위들.map((v) =>
             `<span class="c${v == null ? ' none' : ''}${v === 1 ? ' top' : ''}${a.이글 ? ' mine' : ''}">${v == null ? '–' : `${v}위`}</span>`).join('')}`).join('')}</div>`;
       const 이름 = r.url ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.keyword)}</a>` : esc(r.keyword);
-      return `<div class="row${r.결과 === 'down' ? ' down' : ''}">
+      return `<div class="row${r.결과 === 'urgent' ? ' down' : ''}">
         <span class="d">${짧은날(r.published_on)}</span>
         <span class="kw">${이름}<small>${esc(r.disease || '')}</small></span>
         <span class="acc">${esc(r.account)}</span>
