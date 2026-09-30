@@ -130,10 +130,20 @@ async function 시작() {
     return;
   }
 
-  const [p, r] = await Promise.all([
-    sb.from('seo_posts').select('*'),
-    sb.from('seo_rank_snapshots').select('*').order('measured_on').limit(10000),
-  ]);
+  // Supabase는 한 번에 1,000줄까지만 준다. 나눠서 끝까지 받는다
+  //   (2026-09-30: 순위 기록이 1,172줄이 되자 최근 날짜가 잘려 9/29·9/30이 화면에서 빠졌다)
+  const 전부 = async (표, 정렬) => {
+    const 쪽 = 1000, 모음 = [];
+    for (let 시작 = 0; ; 시작 += 쪽) {
+      let q = sb.from(표).select('*');
+      for (const 칸이름 of 정렬) q = q.order(칸이름);  // 같은 날짜가 수백 줄이라 키워드까지 정렬해야 쪽 경계에서 겹치거나 빠지지 않는다
+      const { data, error } = await q.range(시작, 시작 + 쪽 - 1);
+      if (error) return { error };
+      모음.push(...data);
+      if (data.length < 쪽) return { data: 모음 };
+    }
+  };
+  const [p, r] = await Promise.all([전부('seo_posts', ['id']), 전부('seo_rank_snapshots', ['measured_on', 'keyword'])]);
   if (p.error || r.error) {
     $('banner').innerHTML = `<div class="banner">불러오지 못했습니다: ${esc((p.error || r.error).message)}</div>`;
     return;
