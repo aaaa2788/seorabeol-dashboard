@@ -18,7 +18,12 @@ function 판정(글, 순위기록) {
   const 전 = 기록.filter((r) => r.measured_on < 글.published_on).at(-1);
   const 후 = 기록.filter((r) => r.measured_on > 글.published_on);
   const 값 = (r) => (r && r[열] != null ? r[열] : null);
-  const 줄 = { ...글, 전: 전 ? { 날: 전.measured_on, 순위: 값(전) } : null, 후: 후.map((r) => ({ 날: r.measured_on, 순위: 값(r) })) };
+  // 같은 키워드를 다른 계정이 잡고 있는지 — 이 글이 빠져도 한의원으로선 노출 중일 수 있다
+  //   (9/29 원장 지적: 시트엔 1위인데 성과판엔 「빠짐」. 1위는 5991, 글은 최적 계정이었다)
+  const 최근 = 기록.at(-1);
+  const 다른계정 = 최근 ? Object.entries(칸).filter(([k, c]) => k !== 글.account && 최근[c] != null)
+    .map(([k, c]) => ({ 계정: k, 순위: 최근[c] })).sort((a, b) => a.순위 - b.순위) : [];
+  const 줄 = { ...글, 다른계정, 전: 전 ? { 날: 전.measured_on, 순위: 값(전) } : null, 후: 후.map((r) => ({ 날: r.measured_on, 순위: 값(r) })) };
 
   if (!후.length) return { ...줄, 결과: 'wait', 글자: '아직 안 잼' };
   const 지금 = 값(후.at(-1)) ?? 없음;
@@ -71,7 +76,8 @@ function 그리기() {
         <span class="kw">${이름}<small>${esc(r.disease || '')}</small></span>
         <span class="acc">${esc(r.account)}</span>
         <span class="flow">${흐름}</span>
-        <span class="pill ${색[r.결과]}">${esc(r.글자)}</span>
+        <span class="res"><span class="pill ${색[r.결과]}">${esc(r.글자)}</span>${
+          r.결과 !== 'up' && r.다른계정.length ? `<small class="other">${r.다른계정.map((o) => `${esc(o.계정)} 계정은 ${o.순위}위`).join(' · ')}</small>` : ''}</span>
       </div>`;
     }).join('') : '<div class="empty">해당하는 글이 없습니다.</div>');
 }
