@@ -52,7 +52,14 @@ button:hover { background: var(--soft); }
 .p-same { background: var(--soft); color: var(--same); }
 .p-wait { background: var(--wait-bg); color: var(--wait); }
 .res { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
-.other { font-size: 12px; color: var(--up); font-weight: 600; }
+.accs { display: grid; grid-template-columns: 52px repeat(var(--n), 48px); gap: 3px 4px; align-items: center; font-size: 12px; }
+.accs i { font-style: normal; font-size: 10px; color: var(--muted); text-align: center; }
+.accs b { font-weight: 400; color: var(--muted); font-size: 12px; }
+.accs b.mine { font-weight: 700; color: var(--text); }
+.accs .c { text-align: center; padding: 1px 0; border-radius: 5px; background: var(--soft); color: var(--sub); font-size: 12px; }
+.accs .c.none { background: transparent; color: var(--muted); }
+.accs .c.mine { color: var(--text); font-weight: 700; outline: 1px solid var(--line); }
+.accs .c.mine.none { outline: 1px dashed var(--line); }
 .empty { padding: 24px; text-align: center; color: var(--sub); }
 .note { color: var(--muted); font-size: 12px; margin-top: 12px; }
 @media (max-width: 640px) {
