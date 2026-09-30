@@ -134,13 +134,15 @@ async function 시작() {
   //   (2026-09-30: 순위 기록이 1,172줄이 되자 최근 날짜가 잘려 9/29·9/30이 화면에서 빠졌다)
   const 전부 = async (표, 정렬) => {
     const 쪽 = 1000, 모음 = [];
+    let 서버수 = null;
     for (let 시작 = 0; ; 시작 += 쪽) {
-      let q = sb.from(표).select('*');
+      let q = sb.from(표).select('*', 시작 === 0 ? { count: 'exact' } : undefined);
       for (const 칸이름 of 정렬) q = q.order(칸이름);  // 같은 날짜가 수백 줄이라 키워드까지 정렬해야 쪽 경계에서 겹치거나 빠지지 않는다
-      const { data, error } = await q.range(시작, 시작 + 쪽 - 1);
+      const { data, error, count } = await q.range(시작, 시작 + 쪽 - 1);
       if (error) return { error };
+      if (시작 === 0) 서버수 = count;
       모음.push(...data);
-      if (data.length < 쪽) return { data: 모음 };
+      if (data.length < 쪽) return { data: 모음, 서버수 };
     }
   };
   const [p, r] = await Promise.all([전부('seo_posts', ['id']), 전부('seo_rank_snapshots', ['measured_on', 'keyword'])]);
@@ -148,13 +150,18 @@ async function 시작() {
     $('banner').innerHTML = `<div class="banner">불러오지 못했습니다: ${esc((p.error || r.error).message)}</div>`;
     return;
   }
+  // 스스로 확인 — 서버가 가진 줄 수와 받은 줄 수가 다르면 화면이 틀린 것이다. 숨기지 않고 알린다
+  const 모자람 = [[p, '발행 글'], [r, '순위 기록']].filter(([x]) => x.서버수 != null && x.data.length !== x.서버수)
+    .map(([x, 이름]) => `${이름} ${x.서버수}줄 중 ${x.data.length}줄`);
   if (!p.data.length) {
     $('banner').innerHTML = `<div class="banner">${esc(session.user.email)} 로 로그인했지만 볼 수 있는 기록이 없습니다. 볼 수 있는 사람 목록(seo_viewers)에 이 이메일이 있는지 확인해 주세요.
       <button id="out">로그아웃</button></div>`;
     $('out').onclick = async () => { await sb.auth.signOut(); location.reload(); };
     return;
   }
-  $('banner').innerHTML = '';
+  $('banner').innerHTML = 모자람.length
+    ? `<div class="banner" style="background:var(--down-bg);color:var(--down)">⚠ 일부만 불러왔습니다 (${esc(모자람.join(' · '))}). 이 화면의 숫자는 틀릴 수 있습니다 — Claude Code에 알려 주세요.</div>`
+    : '';
   보여주기(p.data, r.data, session.user.email);
 }
 
