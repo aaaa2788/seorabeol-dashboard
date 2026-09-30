@@ -10,6 +10,7 @@
   --text: #22211e; --sub: #6b6960; --muted: #9a978d;
   --up: #2f6b12; --up-bg: #e7f1db; --down: #9b2c2c; --down-bg: #f9e5e5;
   --same: #5f5e5a; --wait: #7a5a12; --wait-bg: #f7ecd6; --accent: #185fa5;
+  --first: #d42a2a;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -17,6 +18,7 @@
     --text: #ecebe6; --sub: #b0aea5; --muted: #85837b;
     --up: #a6d479; --up-bg: #26361a; --down: #f0a0a0; --down-bg: #3d2020;
     --same: #c9c7bf; --wait: #eac27a; --wait-bg: #3a2f18; --accent: #85b7eb;
+    --first: #ff7b7b;
   }
 }
 * { box-sizing: border-box; }
@@ -60,6 +62,7 @@ button:hover { background: var(--soft); }
 .accs .c.none { background: transparent; color: var(--muted); }
 .accs .c.mine { color: var(--text); font-weight: 700; outline: 1px solid var(--line); }
 .accs .c.mine.none { outline: 1px dashed var(--line); }
+.accs .c.top { color: var(--first); font-weight: 700; }  /* 1위는 빨간 글씨로 (원장 요청 9/30) */
 .empty { padding: 24px; text-align: center; color: var(--sub); }
 .note { color: var(--muted); font-size: 12px; margin-top: 12px; }
 @media (max-width: 640px) {

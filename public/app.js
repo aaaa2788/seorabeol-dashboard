@@ -71,7 +71,7 @@ function 그리기() {
       const 흐름 = !r.보일날.length ? '<span class="r none">기록 없음</span>'
         : `<div class="accs" style="--n:${r.보일날.length}"><b></b>${날머리}${r.계정표.map((a) =>
           `<b class="${a.이글 ? 'mine' : ''}">${esc(a.계정)}${a.이글 ? ' ✎' : ''}</b>${a.순위들.map((v) =>
-            `<span class="c${v == null ? ' none' : ''}${a.이글 ? ' mine' : ''}">${v == null ? '–' : `${v}위`}</span>`).join('')}`).join('')}</div>`;
+            `<span class="c${v == null ? ' none' : ''}${v === 1 ? ' top' : ''}${a.이글 ? ' mine' : ''}">${v == null ? '–' : `${v}위`}</span>`).join('')}`).join('')}</div>`;
       const 이름 = r.url ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.keyword)}</a>` : esc(r.keyword);
       return `<div class="row${r.결과 === 'down' ? ' down' : ''}">
         <span class="d">${짧은날(r.published_on)}</span>
