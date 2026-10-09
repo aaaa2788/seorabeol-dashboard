@@ -27,6 +27,7 @@ scripts/
   build-config.js  Vercel 환경변수 → public/config.js (키를 저장소에 안 적기 위해)
 supabase/
   schema.sql       표와 보안 규칙
+  2026-10-09_익명열.sql  이미 만든 표에 익명 칸(rank_anon)을 더한다 — 한 번만
 ```
 
 ### Supabase 표

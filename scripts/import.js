@@ -29,7 +29,11 @@ const 서라벌 = process.env.SEORABEOL_DIR
 const DATA = path.join(서라벌, '블로그키워드', 'data');
 const ENV = path.join(서라벌, '_원본', '키', '.env');
 
-const 계정표 = { '실명 5991': '5991', '실명 최적': '최적', '실명 5992': '5992' };
+// 익명 (2026-10-09) — 원장: "익명 정원장 블로그의 순위 열을 시트와 성과판에 만들어 줘."
+//   keywords.csv 「익명」 → rank_anon, 익명 글 → account '익명'.
+//   Supabase 에 rank_anon 열이 아직 없으면(supabase/2026-10-09_익명열.sql 을 아직 안 돌렸으면) 둘 다 예전처럼 빼고 보낸다
+const 계정표 = { '실명 5991': '5991', '실명 최적': '최적', '실명 5992': '5992', '익명 정원장': '익명' };
+const 순위칸들 = ['rank_5991', 'rank_choijeok', 'rank_5992', 'rank_anon'];
 const 날짜꼴 = /^\d{4}-\d{2}-\d{2}$/;
 
 function csv읽기(파일) {
@@ -107,11 +111,12 @@ for (const 파일 of 파일들) {
       rank_5991: 순위(k['5991'], 어디),
       rank_choijeok: 순위(k['최적'], 어디),
       rank_5992: 순위(k['5992'], 어디),
+      rank_anon: 순위(k['익명'] ?? '', 어디),   // 2026-10-09 이전 백업엔 익명 열이 없다 → null
     };
     const 열쇠 = `${k.키워드}|${잰날}`;
     const 옛것 = 기록.get(열쇠);
-    if (옛것 && ['rank_5991', 'rank_choijeok', 'rank_5992'].some((c) => 옛것[c] !== 새것[c])) {
-      덮어씀.push(`${열쇠}: ${[옛것.rank_5991, 옛것.rank_choijeok, 옛것.rank_5992].join('/')} → ${[새것.rank_5991, 새것.rank_choijeok, 새것.rank_5992].join('/')} (${path.basename(파일)})`);
+    if (옛것 && 순위칸들.some((c) => 옛것[c] !== 새것[c])) {
+      덮어씀.push(`${열쇠}: ${순위칸들.map((c) => 옛것[c]).join('/')} → ${순위칸들.map((c) => 새것[c]).join('/')} (${path.basename(파일)})`);
     }
     기록.set(열쇠, 새것);
   }
@@ -149,13 +154,25 @@ if (!URL || !KEY) {
   process.exit(1);
 }
 
+const 기본머리 = { apikey: KEY };
+if (KEY.startsWith('eyJ')) 기본머리.Authorization = `Bearer ${KEY}`;  // 옛 service_role 키(JWT)
+
+/* rank_anon 열이 Supabase 에 있나 — 쓰기 전에 한 줄만 읽어 본다 (2026-10-09).
+   쓰다가 오류로 아는 것보다 안전하다 — 반쯤 넣고 멈추는 일이 없다. 열이 없을 때 말고 다른 오류면 멈춘다 */
+async function 익명열있나() {
+  const res = await fetch(`${URL.replace(/\/$/, '')}/rest/v1/seo_rank_snapshots?select=rank_anon&limit=1`, { headers: 기본머리 });
+  if (res.ok) return true;
+  const 글 = await res.text();
+  if (res.status === 400 && /42703|PGRST204|rank_anon/.test(글)) return false;
+  throw new Error(`rank_anon 확인 실패 ${res.status}: ${글.slice(0, 200)}`);
+}
+
 async function 보내기(표, 줄들, 충돌칸) {
   const 머리 = {
-    apikey: KEY,
+    ...기본머리,
     'Content-Type': 'application/json',
     Prefer: 'resolution=merge-duplicates,return=minimal',
   };
-  if (KEY.startsWith('eyJ')) 머리.Authorization = `Bearer ${KEY}`;  // 옛 service_role 키(JWT)
   for (let i = 0; i < 줄들.length; i += 500) {
     const 묶음 = 줄들.slice(i, i + 500).map((r) => ({ ...r, updated_at: new Date().toISOString() }));
     const res = await fetch(`${URL.replace(/\/$/, '')}/rest/v1/${표}?on_conflict=${충돌칸}`, {
@@ -167,7 +184,14 @@ async function 보내기(표, 줄들, 충돌칸) {
 }
 
 (async () => {
-  await 보내기('seo_posts', 글들, 'id');
-  await 보내기('seo_rank_snapshots', 순위들, 'keyword,measured_on');
+  let 보낼글 = 글들, 보낼순위 = 순위들;
+  if (!(await 익명열있나())) {
+    // 아직 SQL 을 안 돌렸다 — 예전과 똑같이 보낸다. 익명 글은 account 없이(계정 검사가 '익명'을 아직 모른다), 순위는 세 칸만
+    console.log('  ⚠ Supabase 에 rank_anon 열 없음 — 익명은 빼고 보냅니다 (supabase/2026-10-09_익명열.sql 을 SQL Editor 에서 돌리면 같이 들어갑니다)');
+    보낼글 = 글들.map((g) => (g.account === '익명' ? { ...g, account: null } : g));
+    보낼순위 = 순위들.map(({ rank_anon: _, ...r }) => r);
+  }
+  await 보내기('seo_posts', 보낼글, 'id');
+  await 보내기('seo_rank_snapshots', 보낼순위, 'keyword,measured_on');
   console.log('✓ 끝');
 })().catch((e) => { console.error('✗ ' + e.message); process.exit(1); });

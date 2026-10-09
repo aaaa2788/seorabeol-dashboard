@@ -2,7 +2,11 @@
 // 발행한 글마다 「발행 전 마지막 순위 → 발행 뒤 순위들」을 한 줄로 놓고, 오른 글·빠진 글을 가른다.
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-const 칸 = { '5991': 'rank_5991', '최적': 'rank_choijeok', '5992': 'rank_5992' };
+// 익명 (2026-10-09) — 원장: "익명 정원장 블로그의 순위 열을 시트와 성과판에 만들어 줘." 5992 옆 칸, 계정 거르기에도.
+//   Supabase 에 rank_anon 이 아직 없으면 값이 undefined → 「–」로 보인다(노출 없음과 같은 모양)
+const 칸 = { '5991': 'rank_5991', '최적': 'rank_choijeok', '5992': 'rank_5992', '익명': 'rank_anon' };
+// 긴급은 실명 세 계정으로만 본다 — 익명 글엔 한의원 이름이 없어, 거기 떠도 환자가 서라벌을 찾지 못한다 (원장 기준 9/30 그대로)
+const 실명칸 = { '5991': 'rank_5991', '최적': 'rank_choijeok', '5992': 'rank_5992' };
 const 없음 = 999;  // 노출 없음은 가장 나쁜 순위로 비교한다
 const $ = (id) => document.getElementById(id);
 const 짧은날 = (d) => `${+d.slice(5, 7)}/${+d.slice(8, 10)}`;
@@ -27,10 +31,10 @@ function 판정(글, 순위기록) {
 
   if (!후.length) return { ...줄, 결과: 'wait', 글자: '아직 안 잼' };
 
-  // 긴급 = 가장 최근 측정에서 세 계정 모두 5위 밖 (원장 기준 9/30)
+  // 긴급 = 가장 최근 측정에서 실명 세 계정 모두 5위 밖 (원장 기준 9/30)
   //   한 계정이라도 5위 안이면 한의원은 노출 중이라 급하지 않다. 글 하나가 아니라 키워드로 본다
   const 최근 = 후.at(-1);
-  const 최고계정 = Object.entries(칸).map(([k, c]) => ({ 계정: k, 순위: 최근[c] ?? 없음 }))
+  const 최고계정 = Object.entries(실명칸).map(([k, c]) => ({ 계정: k, 순위: 최근[c] ?? 없음 }))
     .sort((a, b) => a.순위 - b.순위)[0];
   if (최고계정.순위 > 5) return { ...줄, 결과: 'urgent', 글자: '긴급 · 5위 안 없음' };
 
@@ -42,7 +46,7 @@ function 판정(글, 순위기록) {
 
 // ── 그리기
 const 묶음 = [
-  { key: 'urgent', 이름: '긴급 · 세 계정 모두 5위 밖', 색: 'p-down' },
+  { key: 'urgent', 이름: '긴급 · 실명 세 계정 모두 5위 밖', 색: 'p-down' },
   { key: 'up', 이름: '이 글로 순위 올라감', 색: 'p-up' },
   { key: 'ok', 이름: '5위 안 노출 중', 색: 'p-same' },
   { key: 'wait', 이름: '아직 안 잼', 색: 'p-wait' },
@@ -69,7 +73,7 @@ function 그리기() {
   $('count').textContent = `${보일줄.length}편 보는 중${상태.결과 ? ' · 위 칸을 다시 누르면 전체' : ''}`;
   $('list').innerHTML = `<div class="row hd"><span>발행일</span><span>키워드</span><span>계정</span><span>순위 흐름 (발행 전 → 후)</span><span>결과</span></div>`
     + (보일줄.length ? 보일줄.map((r) => {
-      // 세 계정 × 같은 날짜. 이 글을 올린 계정 줄을 진하게, 나머지는 흐리게
+      // 네 계정(익명 포함) × 같은 날짜. 이 글을 올린 계정 줄을 진하게, 나머지는 흐리게
       const 날머리 = r.보일날.map((d, i) => `<i>${i === 0 && r.전있음 ? '전 ' : ''}${짧은날(d)}</i>`).join('');
       const 흐름 = !r.보일날.length ? '<span class="r none">기록 없음</span>'
         : `<div class="accs" style="--n:${r.보일날.length}"><b></b>${날머리}${r.계정표.map((a) =>

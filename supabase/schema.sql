@@ -12,7 +12,7 @@ create table if not exists public.seo_posts (
   disease       text,                      -- 질환군
   post_type     text,                      -- 글유형 (① 진단형 등)
   blog          text,                      -- 원래 적힌 블로그 이름 (실명 최적 등)
-  account       text check (account in ('5991', '최적', '5992')),  -- 순위를 재는 계정. 없으면 null
+  account       text check (account in ('5991', '최적', '5992', '익명')),  -- 순위를 재는 계정. 없으면 null (익명 2026-10-09)
   title         text,
   url           text,
   updated_at    timestamptz not null default now()
@@ -26,6 +26,7 @@ create table if not exists public.seo_rank_snapshots (
   rank_5991     smallint check (rank_5991 between 1 and 100),   -- null = 그날 노출 없음
   rank_choijeok smallint check (rank_choijeok between 1 and 100),
   rank_5992     smallint check (rank_5992 between 1 and 100),
+  rank_anon     smallint check (rank_anon between 1 and 100),   -- 익명 정원장 (2026-10-09). 이미 만든 표에는 2026-10-09_익명열.sql 로 더한다
   updated_at    timestamptz not null default now(),
   primary key (keyword, measured_on)
 );

@@ -7,6 +7,8 @@ window.SAMPLE = {
     { published_on: '2026-09-18', keyword: '예시 건선 한의원', disease: '건선', account: '최적', title: '예시 글 3', url: null },
     { published_on: '2026-09-03', keyword: '예시 두드러기 병원', disease: '두드러기', account: '최적', title: '예시 글 4', url: null },
     { published_on: '2026-09-21', keyword: '예시 아토피 한의원', disease: '아토피', account: '5992', title: '예시 글 5', url: null },
+    // 익명 계정 예시 (2026-10-09 — 성과판에 익명 칸이 생겼다)
+    { published_on: '2026-09-24', keyword: '예시 습진 정보', disease: '습진', account: '익명', title: '예시 글 6', url: null },
   ],
   ranks: [
     { keyword: '예시 대상포진 병원', measured_on: '2026-09-09', rank_5991: null },
@@ -20,5 +22,8 @@ window.SAMPLE = {
     { keyword: '예시 두드러기 병원', measured_on: '2026-09-16', rank_choijeok: null },
     { keyword: '예시 두드러기 병원', measured_on: '2026-09-21', rank_choijeok: null },
     { keyword: '예시 아토피 한의원', measured_on: '2026-09-16', rank_5992: 7 },
+    { keyword: '예시 대상포진 병원', measured_on: '2026-09-28', rank_5991: 2, rank_anon: 9 },
+    { keyword: '예시 습진 정보', measured_on: '2026-09-20', rank_5992: 11, rank_anon: null },
+    { keyword: '예시 습진 정보', measured_on: '2026-09-28', rank_5992: 12, rank_anon: 6 },
   ],
 };
