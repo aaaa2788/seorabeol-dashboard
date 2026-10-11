@@ -20,13 +20,15 @@ function 판정(글, 순위기록) {
   const 기록 = 순위기록.filter((r) => r.keyword === 글.keyword)
     .sort((a, b) => a.measured_on.localeCompare(b.measured_on));
   const 전 = 기록.filter((r) => r.measured_on < 글.published_on).at(-1);
-  const 후 = 기록.filter((r) => r.measured_on > 글.published_on);
+  // 발행 당일 저녁에 잰 순위도 「후」로 친다 (원장 2026-10-11 — 「둘 다 고쳐줘」). 10/9 최적 글이 그날 1위였는데
+  //   발행일보다 뒤 날짜만 세서 「아직 안 잼」으로 보였다. 다만 글이 측정보다 늦게 올라갔을 수도 있어 칸 머리에 「당일」로 밝힌다
+  const 후 = 기록.filter((r) => r.measured_on >= 글.published_on);
   const 값 = (r) => (r && r[열] != null ? r[열] : null);
   // 같은 날짜들로 세 계정 순위를 모두 싣는다 — 이 글이 빠져도 다른 계정 글이 노출 중일 수 있다
   //   (9/30 원장: 시트엔 5991 1위인데 최적 글은 「빠짐」. 발행 계정만 보지 말고 세 계정을 한 번에)
   const 보일날 = [전, ...후.slice(-4)].filter(Boolean);
   const 계정표 = Object.entries(칸).map(([k, c]) => ({ 계정: k, 이글: k === 글.account, 순위들: 보일날.map((r) => r[c] ?? null) }));
-  const 줄 = { ...글, 계정표, 보일날: 보일날.map((r) => r.measured_on), 전있음: !!전,
+  const 줄 = { ...글, 계정표, 보일날: 보일날.map((r) => r.measured_on), 전있음: !!전, 당일: 글.published_on,
     전: 전 ? { 날: 전.measured_on, 순위: 값(전) } : null, 후: 후.map((r) => ({ 날: r.measured_on, 순위: 값(r) })) };
 
   if (!후.length) return { ...줄, 결과: 'wait', 글자: '아직 안 잼' };
@@ -74,7 +76,7 @@ function 그리기() {
   $('list').innerHTML = `<div class="row hd"><span>발행일</span><span>키워드</span><span>계정</span><span>순위 흐름 (발행 전 → 후)</span><span>결과</span></div>`
     + (보일줄.length ? 보일줄.map((r) => {
       // 네 계정(익명 포함) × 같은 날짜. 이 글을 올린 계정 줄을 진하게, 나머지는 흐리게
-      const 날머리 = r.보일날.map((d, i) => `<i>${i === 0 && r.전있음 ? '전 ' : ''}${짧은날(d)}</i>`).join('');
+      const 날머리 = r.보일날.map((d, i) => `<i>${i === 0 && r.전있음 ? '전 ' : d === r.당일 ? '당일 ' : ''}${짧은날(d)}</i>`).join('');
       const 흐름 = !r.보일날.length ? '<span class="r none">기록 없음</span>'
         : `<div class="accs" style="--n:${r.보일날.length}"><b></b>${날머리}${r.계정표.map((a) =>
           `<b class="${a.이글 ? 'mine' : ''}">${esc(a.계정)}${a.이글 ? ' ✎' : ''}</b>${a.순위들.map((v) =>
